@@ -1,11 +1,35 @@
 import { useState } from 'react';
-import PropTypes from 'prop-types';
-
+import { useDispatch, useSelector } from 'react-redux';
+import { Notify } from 'notiflix';
+import { addContacts } from '../../../redux/contacts/contacts-slice';
+import { getAllContacts } from '../../../redux/contacts/contacts-selectors';
 import styles from './contact-form.module.css';
 
-const ContactForm = ({ onSubmit }) => {
+const ContactForm = () => {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
+
+  const contacts = useSelector(getAllContacts);
+  const dispatch = useDispatch();
+
+  const isDublicate = (name, number) => {
+    const normalizedName = name.toLowerCase();
+    const normalizedNumber = number.toLowerCase();
+    return contacts.some(
+      ({ name, number }) =>
+        name.toLowerCase() === normalizedName ||
+        number.toLowerCase() === normalizedNumber
+    );
+  };
+
+  const handleAddContact = ({ name, number }) => {
+    if (isDublicate(name, number)) {
+      return Notify.warning(`Contact '${name}: ${number}' is already exist`);
+    }
+    dispatch(addContacts({ name, number }));
+    setName('');
+    setNumber('');
+  };
 
   const handleChangeName = ({ target: { value } }) => {
     setName(value);
@@ -17,15 +41,12 @@ const ContactForm = ({ onSubmit }) => {
 
   const handleSubmit = event => {
     event.preventDefault();
-    const newContact = onSubmit({ name, number });
-    if (!newContact) {
-      setName('');
-      setNumber('');
-    }
+    handleAddContact({ name, number });
   };
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
+      <h1 className={styles.title}>Phonebook</h1>
       <div className={styles.block}>
         <label className={styles.label}>
           Name
@@ -67,7 +88,3 @@ const ContactForm = ({ onSubmit }) => {
 };
 
 export default ContactForm;
-
-ContactForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
-};

@@ -1,9 +1,17 @@
-import PropTypes from 'prop-types';
-
+import { useDispatch, useSelector } from 'react-redux';
+import { getFilteredContacts } from '../../../redux/contacts/contacts-selectors';
+import { removeContact } from '../../../redux/contacts/contacts-slice';
 import styles from './contact-list.module.css';
 
-const ContactList = ({ contacts, removeContact }) => {
-  const contactList = contacts.map(contact => {
+const ContactList = () => {
+  const filteredContacts = useSelector(getFilteredContacts);
+  const dispatch = useDispatch();
+
+  const contactList = filteredContacts.map(contact => {
+    const handleRemoveContact = id => {
+      dispatch(removeContact(id));
+    };
+
     return (
       <li key={contact.id} className={styles.item}>
         <span>
@@ -12,7 +20,7 @@ const ContactList = ({ contacts, removeContact }) => {
 
         <button
           className={styles.btn}
-          onClick={() => removeContact(contact.id)}
+          onClick={() => handleRemoveContact(contact.id)}
           type="button"
         >
           x
@@ -20,22 +28,8 @@ const ContactList = ({ contacts, removeContact }) => {
       </li>
     );
   });
+
   return <ul className={styles.list}>{contactList}</ul>;
 };
 
 export default ContactList;
-
-ContactList.defaultProps = {
-  contacts: [],
-};
-
-ContactList.propTypes = {
-  contacts: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      number: PropTypes.string.isRequired,
-    })
-  ),
-  removeContact: PropTypes.func.isRequired,
-};
